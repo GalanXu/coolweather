@@ -14,16 +14,11 @@
         android:layout_height="wrap_content"
         android:text="点击开始" />
 
-    <ScrollView
+    <ListView
+        android:layout_below="@id/bt"
+        android:id="@+id/list_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/bt" >
-
-        <TextView
-            android:id="@+id/tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hello_world" />
-    </ScrollView>
+        android:layout_height="match_parent" >
+    </ListView>
 
 </RelativeLayout>

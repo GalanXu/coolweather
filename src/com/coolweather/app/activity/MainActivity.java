@@ -1,45 +1,84 @@
-package com.coolweather.app;
+package com.coolweather.app.activity;
 
+import java.util.ArrayList;
+import java.util.List;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
-import android.widget.TextView;
-
+import android.widget.ListView;
+import com.coolweather.app.R;
 import com.coolweather.app.db.CoolWeatherDB;
 import com.coolweather.app.model.City;
-import com.coolweather.app.model.Province;
 import com.coolweather.app.util.HttpCallbackListener;
 import com.coolweather.app.util.HttpUtil;
-import com.google.gson.Gson;
+import com.coolweather.app.util.Utility;
 
 public class MainActivity extends Activity {
 	private Button bt;
-	private TextView tv;
 	private ProgressDialog progressDialog;
 	private CoolWeatherDB coolWeatherDB;
+	private ListView listView;
+	private CityAdapter cityAdapter;
+	private List<City> dataList = new ArrayList<City>();
 
 	public static String PROVINCE_URL = "http://v.juhe.cn/weather/citys?key=9bd43d62ba9657efa69a41744fa16161";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
+		listView = (ListView) findViewById(R.id.list_view);
+		
+//		City c = new City();
+//		c.id =1;
+//		c.province ="hu";
+//		c.city ="huang";
+//		c.district ="da";
+//		dataList.add(c); 
+		
+		cityAdapter = new CityAdapter(this, dataList);
+		if (dataList != null) {
+			listView.setAdapter(cityAdapter);
+		}
 		coolWeatherDB = CoolWeatherDB.getInstance(this);
+		
+		listView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+					long arg3) {
+				
+			}
+		});
 		bt = (Button) findViewById(R.id.bt);
 		bt.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View arg0) {
-				queryFromServer();
-				// 装个样子
+				queryCities();
 			}
 		});
-		tv = (TextView) findViewById(R.id.tv);
+		queryCities();
+	}
+
+	/**
+	 * 查询选中省内所有的市，优先从数据库查询，如果没有查询到再去服务器上查询。
+	 */
+	private void queryCities() {
+		dataList = coolWeatherDB.loadProvinces();
+		if (dataList.size() > 0) {
+			cityAdapter.refreshAdapter(dataList);
+			listView.setSelection(0);
+		} else {
+			queryFromServer();
+		}
 	}
 
 	private void queryFromServer() {
@@ -47,28 +86,22 @@ public class MainActivity extends Activity {
 		HttpUtil.sendHttpRequest(PROVINCE_URL, new HttpCallbackListener() {
 			@Override
 			public void onFinish(final String response) {
-				closeProgressDialog();
-				// Log.i("MainActivity", response);
-				runOnUiThread(new Runnable() {
+				boolean result = false;
 
-					@Override
-					public void run() {
-						Gson gson = new Gson();
-						Province province = gson.fromJson(response,
-								Province.class);
+				result = Utility.handleProvincesResponse(coolWeatherDB,
+						response);
+				if (result) {
+					runOnUiThread(new Runnable() {
 
-						if ("200".equals(province.resultcode)
-								&& "successed".equals(province.reason)) {
-							Log.i("MainActivity", province.error_code);
-							Log.i("MainActivity", province.resultcode);
-							Log.i("MainActivity", province.reason);
-							for (City c : province.result) {
-								coolWeatherDB.saveProvince(c);
-							}
+						@Override
+						public void run() {
+							// TODO
+							closeProgressDialog();
+							queryCities();
 						}
- 
-					}
-				});
+					});
+				}
+
 			}
 
 			@Override
