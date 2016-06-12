@@ -2,9 +2,12 @@ package com.coolweather.app.activity;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -12,6 +15,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.ListView;
+
 import com.coolweather.app.R;
 import com.coolweather.app.db.CoolWeatherDB;
 import com.coolweather.app.model.City;
@@ -52,9 +56,14 @@ public class MainActivity extends Activity {
 		listView.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+			public void onItemClick(AdapterView<?> arg0, View arg1, int index,
 					long arg3) {
-				
+				String countyCode = dataList.get(index).id;
+				Log.i("MainActivity", "countyCode"+countyCode);
+				Intent intent = new Intent(MainActivity.this,WeatherActivity.class);
+				intent.putExtra("county_code", countyCode);
+				startActivity(intent);
+				finish();
 			}
 		});
 		bt = (Button) findViewById(R.id.bt);
@@ -125,7 +134,7 @@ public class MainActivity extends Activity {
 			progressDialog = new ProgressDialog(this);
 			progressDialog.setMessage("ÕýÔÚ¼ÓÔØ...");
 			progressDialog.setCanceledOnTouchOutside(false);
-		}
+		} 
 		progressDialog.show();
 	}
 

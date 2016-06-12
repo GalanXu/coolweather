@@ -69,7 +69,7 @@ public class CoolWeatherDB {
 		if (cursor.moveToFirst()) {
 			do {
 				City citys = new City();
-				citys.id = cursor.getInt(cursor.getColumnIndex("id"));
+				citys.id = cursor.getString(cursor.getColumnIndex("id"));
 				citys.province = cursor.getString(cursor.getColumnIndex("province"));
 				citys.city = cursor.getString(cursor.getColumnIndex("city"));
 				citys.district = cursor.getString(cursor.getColumnIndex("district"));
