@@ -1,10 +1,11 @@
 package com.coolweather.app.activity;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -13,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.coolweather.app.R;
+import com.coolweather.app.service.AutoUpdateService;
 import com.coolweather.app.util.HttpCallbackListener;
 import com.coolweather.app.util.HttpUtil;
 import com.coolweather.app.util.Utility;
@@ -60,9 +62,16 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		weatherDespText = (TextView) findViewById(R.id.weather_desp);
 		temp1Text = (TextView) findViewById(R.id.temp1);
 		currentDateText = (TextView) findViewById(R.id.current_date);
-//		switchCity = (Button) findViewById(R.id.switch_city);
-//		refreshWeather = (Button) findViewById(R.id.refresh_weather);
+		switchCity = (Button) findViewById(R.id.switch_city);
+		refreshWeather = (Button) findViewById(R.id.refresh_weather);
+		switchCity.setOnClickListener(this);
+		refreshWeather.setOnClickListener(this);
+
 		String countyCode = getIntent().getStringExtra("county_code");
+		SharedPreferences.Editor editor = PreferenceManager
+				.getDefaultSharedPreferences(this).edit();
+		editor.putString("county_code", countyCode);
+		editor.commit();
 		queryWeatherCode(countyCode);
 	}
 
@@ -74,13 +83,14 @@ public class WeatherActivity extends Activity implements OnClickListener {
 				+ countyCode + "&dtype=&key=9bd43d62ba9657efa69a41744fa16161";
 		queryFromServer(address);
 	}
-	//http://v.juhe.cn/weather/index?format=2&cityname=14&dtype=&key=9bd43d62ba9657efa69a41744fa16161
+
+	// http://v.juhe.cn/weather/index?format=2&cityname=14&dtype=&key=9bd43d62ba9657efa69a41744fa16161
 
 	private void queryFromServer(final String address) {
 		HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
 			@Override
 			public void onFinish(final String response) {
-				
+
 				Utility.handleWeatherResponse(WeatherActivity.this, response);
 				runOnUiThread(new Runnable() {
 
@@ -117,11 +127,32 @@ public class WeatherActivity extends Activity implements OnClickListener {
 		currentDateText.setText(prefs.getString("date_y", ""));
 		weatherInfoLayout.setVisibility(View.VISIBLE);
 		cityNameText.setVisibility(View.VISIBLE);
+
+		Intent intent = new Intent(this, AutoUpdateService.class);
+		startService(intent);
 	}
 
 	@Override
-	public void onClick(View arg0) {
-
+	public void onClick(View v) {
+		switch (v.getId()) {
+		case R.id.switch_city:
+			Intent intent = new Intent(this, MainActivity.class);
+			intent.putExtra("from_weather_activity", true);
+			startActivity(intent);
+			finish();
+			break;
+		case R.id.refresh_weather:
+			publishText.setText("Í¬²½ÖÐ...");
+			SharedPreferences prefs = PreferenceManager
+					.getDefaultSharedPreferences(this);
+			String countyCode = prefs.getString("countyCode", "");
+			if (!TextUtils.isEmpty(countyCode)) {
+				queryWeatherCode(countyCode);
+			}
+			break;
+		default:
+			break;
+		}
 	}
 
 }
